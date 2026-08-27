@@ -26,7 +26,7 @@
                 <tr>
                     <td>
                         <span class="label">
-                            {% if status_text != "" %}<s>{{ service.std }}</s>{% else %}{{ service.std }}{% endif %}{% if status_text != "" %}&nbsp;&nbsp;&nbsp;&nbsp;{{ status_text }}{% endif %}
+                            {% if status_text != "" %}<s>{{ service.std }}</s>{% else %}{{ service.std }}{% endif %}{% if status_text != "" %}&nbsp;&nbsp;&nbsp;{{ status_text }}{% endif %}
                         </span>
                         {% if fast_train_threshold > 0 %}
                         {% assign departure_time = "now" | date: "%d %B %Y " | append: service.std | date: "%s" | divided_by: 60 %}
