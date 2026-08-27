@@ -22,7 +22,7 @@
                 {% assign status_text = "" %}
                 {% if row_cancelled %}{% assign status_text = "Cancelled" %}
                 {% elsif service.etd == "Delayed" %}{% assign status_text = "Delayed" %}
-                {% elsif service.etd != "On time" %}{% capture status_text %}Exp. {{ service.etd }}{% endcapture %}{% endif %}
+                {% elsif service.etd != "On time" %}{% capture status_text %}Exp {{ service.etd }}{% endcapture %}{% endif %}
                 <tr>
                     <td>
                         <span class="label">
@@ -41,7 +41,7 @@
                         <span class="label">
                             {% if row_cancelled %}<s>{{ destination.st }}</s>
                             {% elsif destination.et != "On time" and destination.et != "Delayed" %}
-                            Exp. {{ destination.et }}
+                            Exp {{ destination.et }}
                             {% else %}
                             {{ destination.st }}
                             {% endif %}

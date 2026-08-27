@@ -26,7 +26,7 @@ You'll need:
 
 Each row shows the scheduled departure from your origin and the scheduled arrival at your destination.
 
-* When a service is not on time, the scheduled departure is struck through and the current status follows it — `Exp. 21:46`, `Delayed`, or `Cancelled`.
+* When a service is not on time, the scheduled departure is struck through and the current status follows it — `Exp 21:46`, `Delayed`, or `Cancelled`.
 * Cancelled services have both the departure and arrival struck through. A service counts as cancelled if it is cancelled outright, or if your destination has been dropped from its calling points.
 
 The screenshots above show injected disruption data; on a normal day most rows are simply on time.
