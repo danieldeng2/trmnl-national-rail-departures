@@ -1,34 +1,33 @@
 <div class="layout layout--top">
     <div class="flex flex--col stretch-x">
-        {% if result.nrccMessages.message %}
+        {% if nrcc_text != "" %}
         <div class="flex flex--row flex--left">
             <div class="image image-stroke">{{ alert_logo }}</div>
-            <div class="description stretch-x" data-clamp="3">
-                {% if result.nrccMessages.message.first %}
-                {{ result.nrccMessages.message | join: " " | strip_html }}
-                {% else %}
-                {{ result.nrccMessages.message | strip_html }}
-                {% endif %}
-            </div>
+            <div class="description stretch-x" data-clamp="3">{{ nrcc_text }}</div>
         </div>
         {% endif %}
         <table class="table" data-table-limit="true" table-overflow-counter="false">
             <thead>
                 <tr>
                     <th><span class="title">Departure</span></th>
-                    <th><span class="title">Destination</span></th>
-                    <th><span class="title">Platform</span></th>
-                    <th><span class="title">Status</span></th>
                     <th><span class="title">Arrival</span></th>
                 </tr>
             </thead>
             <tbody>
                 {% if result_count > 0 %}
-                {% for service in result.trainServices.service %}
-                {% assign destination = service.subsequentCallingPoints.callingPointList.callingPoint | where: "crs", result.filtercrs | first %}
+                {% for service in trainServices %}
+                {% assign destination = service.subsequentCallingPoints.first.callingPoint | where: "crs", filtercrs | first %}
+                {% assign row_cancelled = false %}
+                {% if service.etd == "Cancelled" or destination.isCancelled %}{% assign row_cancelled = true %}{% endif %}
+                {% assign status_text = "" %}
+                {% if row_cancelled %}{% assign status_text = "Cancelled" %}
+                {% elsif service.etd == "Delayed" %}{% assign status_text = "Delayed" %}
+                {% elsif service.etd != "On time" %}{% capture status_text %}Exp. {{ service.etd }}{% endcapture %}{% endif %}
                 <tr>
                     <td>
-                        <span class="label">{{ service.std }}</span>
+                        <span class="label">
+                            {% if status_text != "" %}<s>{{ service.std }}</s>{% else %}{{ service.std }}{% endif %}{% if status_text != "" %}&nbsp;&nbsp;&nbsp;&nbsp;{{ status_text }}{% endif %}
+                        </span>
                         {% if fast_train_threshold > 0 %}
                         {% assign departure_time = "now" | date: "%d %B %Y " | append: service.std | date: "%s" | divided_by: 60 %}
                         {% assign arrival_time = "now" | date: "%d %B %Y " | append: destination.st | date: "%s" | divided_by: 60 %}
@@ -38,22 +37,11 @@
                         {% endif %}
                         {% endif %}
                     </td>
-                    <td><span class="label" data-clamp="1">{{ service.destination.location.locationName }}</span></td>
-                    <td><span class="label">{{ service.platform }}</span></td>
                     <td>
                         <span class="label">
-                            {% unless service.etd == "Cancelled" or service.etd == "On time" %}
-                            Expected 
-                            {% endunless %}
-                            {{ service.etd }}
-                        </span>
-                    </td>
-                    <td>
-                        <span class="label">
-                            {% if destination.isCancelled == "true" %}
-                            Cancelled
+                            {% if row_cancelled %}<s>{{ destination.st }}</s>
                             {% elsif destination.et != "On time" and destination.et != "Delayed" %}
-                            Est {{ destination.et }}
+                            Exp. {{ destination.et }}
                             {% else %}
                             {{ destination.st }}
                             {% endif %}
@@ -63,7 +51,7 @@
                 {% endfor %}
                 {% else %}
                 <tr>
-                    <td colspan="5">
+                    <td colspan="2">
                         <span class="label">No services scheduled</span>
                     </td>
                 </tr>
@@ -73,6 +61,6 @@
     </div>
 </div>
 <div class="title_bar">
-    <span class="title">From {{ result.locationName }} to {{ result.filterLocationName }}</span>
-    <span class="instance">{{  result.generatedAt | date: "%H:%M on %d/%m/%y" }}</span>
+    <span class="title">From {{ locationName }} to {{ filterLocationName }}</span>
+    <span class="instance">{{  generatedAt | date: "%H:%M on %d/%m/%y" }}</span>
 </div>

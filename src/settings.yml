@@ -3,12 +3,12 @@ strategy: polling
 no_screen_padding: 'no'
 dark_mode: 'no'
 static_data: ''
-polling_verb: post
+polling_verb: get
 framework_version: 2.3.7
 serverless_language: 
-polling_url: https://lite.realtime.nationalrail.co.uk/OpenLDBWS/ldb12.asmx
-polling_headers: content-type=text/xml&SOAPAction=http://thalesgroup.com/RTTI/2015-05-14/ldb/GetDepBoardWithDetails
-polling_body: "<soap:Envelope\r\n    xmlns:soap=\"http://www.w3.org/2003/05/soap-envelope\"\r\n    xmlns:typ=\"http://thalesgroup.com/RTTI/2013-11-28/Token/types\"\r\n    xmlns:ldb=\"http://thalesgroup.com/RTTI/2021-11-01/ldb/\"\r\n>\r\n   <soap:Header>\r\n      <typ:AccessToken>\r\n        <typ:TokenValue>{{ api_key }}</typ:TokenValue>\r\n      </typ:AccessToken>\r\n   </soap:Header>\r\n   <soap:Body>\r\n      <ldb:GetDepBoardWithDetailsRequest>\r\n        <ldb:numRows>10</ldb:numRows>\r\n        <ldb:crs>{{ departing_crs }}</ldb:crs>\r\n        <ldb:filterType>to</ldb:filterType>\r\n        <ldb:filterCrs>{{ arriving_crs }}</ldb:filterCrs>\r\n      </ldb:GetDepBoardWithDetailsRequest>\r\n   </soap:Body>\r\n</soap:Envelope>"
+polling_url: https://api1.raildata.org.uk/1010-live-departure-board-dep1_2/LDBWS/api/20220120/GetDepBoardWithDetails/{{ departing_crs }}?numRows=10&filterCrs={{ arriving_crs }}&filterType=to
+polling_headers: x-apikey={{ api_key }}
+polling_body: ''
 id: 203604
 custom_fields:
 - keyname: author_bio
@@ -16,38 +16,42 @@ custom_fields:
   category: travel
   field_type: author_bio
   description: |
-    National Rail Departures displays the upcoming departures from a chosen station to a particular destination.
+    National Rail Departures shows the next trains from a chosen station to a particular destination, with the scheduled departure and the scheduled arrival at your destination side by side.
+    <br><br>
+    When a service is not on time the scheduled departure is struck through and the current status follows it &mdash; an expected time, <em>Delayed</em>, or <em>Cancelled</em>. Cancelled services have both times struck through, including services that are running but no longer call at your destination.
     <br><br>
     <strong>Prerequisites</strong>
     <br>
     You will need:<br>
-    1. A National Rail API key. If you don't already have one, you can request one <a href="http://realtime.nationalrail.co.uk/OpenLDBWSRegistration">at the National Rail Developers website</a>.<br>
+    1. A Rail Data Marketplace API key. If you don't already have one, register at <a href="https://raildata.org.uk/">the Rail Data Marketplace</a>, subscribe to the free "Live Departure Board" data product, and copy the Consumer key from its Specification tab.<br>
     2. The CRS code for your departure and destination stations, which can be found <a href="https://www.nationalrail.co.uk/">on the National Rail website</a>.
     <br><br>
     <strong>Attributions</strong>
     <br>
     The data feed is powered by <a href="https://www.nationalrail.co.uk/developers/">National Rail Enquiries</a>.
-  github_url: https://github.com/jshiell/trmnl-national-rail-departures
+    <br>
+    Based on the original plugin by <a href="https://github.com/jshiell/trmnl-national-rail-departures">jshiell</a>.
+  github_url: https://github.com/danieldeng2/trmnl-national-rail-departures
 - keyname: departing_crs
   field_type: string
   name: Departing From
-  description: The CRS code for the departure station
+  description: The CRS code for the station you are travelling from
   help_text: You can find this <a href="https://www.nationalrail.co.uk/">on the National Rail website</a>
 - keyname: arriving_crs
   field_type: string
   name: Arriving At
-  description: The CRS code for the arrival station
+  description: The CRS code for the station you are travelling to
   help_text: You can find this <a href="https://www.nationalrail.co.uk/">on the National Rail website</a>
 - keyname: api_key
   field_type: string
   name: API Key
-  description: Your API key for the National Rail web services
-  help_text: <a href="https://realtime.nationalrail.co.uk/OpenLDBWSRegistration/">You must register for an API key</a> if you don't already have one
+  description: Your Rail Data Marketplace consumer key for the Live Departure Board data product
+  help_text: Subscribe to the free "Live Departure Board" product on <a href="https://raildata.org.uk/">the Rail Data Marketplace</a> and copy the Consumer key from its Specification tab
 - keyname: fast_train_threshold
   field_type: number
   name: Fast Trains Threshold (Minutes)
   optional: true
   min: 0
-  description: If set, we flag train journeys below this length of time in minutes as a fast train
+  description: If set, journeys to your destination shorter than this many minutes are marked with a clock icon. Leave blank to hide the marker.
 name: National Rail Departures
 refresh_interval: 15
