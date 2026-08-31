@@ -4,8 +4,8 @@
             <thead>
                 <tr>
                     <th><span class="title">Departure</span></th>
-                    <th><span class="title">Arrival</span></th>
                     <th><span class="title">Coaches</span></th>
+                    <th><span class="title">Arrival</span></th>
                 </tr>
             </thead>
             <tbody>
@@ -33,6 +33,9 @@
                         {% endif %}
                     </td>
                     <td>
+                        <span class="label">{% if service.length > 0 %}{% if row_cancelled %}<s>{{ service.length }}</s>{% else %}{{ service.length }}{% endif %}{% endif %}</span>
+                    </td>
+                    <td>
                         <span class="label">
                             {% if row_cancelled %}<s>{{ destination.st }}</s>
                             {% elsif destination.et != "On time" and destination.et != "Delayed" %}
@@ -41,9 +44,6 @@
                             {{ destination.st }}
                             {% endif %}
                         </span>
-                    </td>
-                    <td>
-                        <span class="label">{% if service.length > 0 %}{{ service.length }}{% endif %}</span>
                     </td>
                 </tr>
                 {% endfor %}
