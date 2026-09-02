@@ -39,6 +39,21 @@ You'll need Ruby to run [trmnl-preview](https://github.com/usetrmnl/trmnlp) or D
 NATIONAL_RAIL_API_KEY=<your-api-key-here> bin/trmnlp serve
 ```
 
+## Checking the live screen
+
+`bin/trmnl-screen` opens whatever TRMNL is currently serving to your device, and
+says when that image was generated.
+
+```bash
+TRMNL_DEVICE_API_KEY=<your-device-key-here> bin/trmnl-screen
+```
+
+The key is per-device, under Devices in the TRMNL dashboard; the script also picks
+it up from the nearest `.env`. Pass `--watch` to sit and report each new image.
+
+Read the build time, not `rendered_at` from the playlist API — that advances on
+device fetches and playlist edits even when no new image is produced.
+
 ## Attributions
 
 The data feed is [powered by National Rail Enquiries](https://www.nationalrail.co.uk/developers/).

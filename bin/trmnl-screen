@@ -1,0 +1,133 @@
+#!/usr/bin/env python3
+"""Show the screen TRMNL is currently serving to the device.
+
+The trailing number on the returned `filename` is the epoch at which that image
+was generated, and it is the only field that moves solely when a genuinely new
+image exists. `rendered_at` on a playlist item also advances on device fetches
+and playlist edits that produce no new image, so it is not a freshness signal.
+
+The image URL is a signed S3 link good for about 300s — long enough to open,
+too short to bookmark.
+
+Needs TRMNL_DEVICE_API_KEY, from the environment or the nearest .env going up
+from here (the device key is per-device: Devices -> your device -> API key).
+"""
+
+import argparse
+import json
+import os
+import subprocess
+import sys
+import time
+import urllib.error
+import urllib.request
+from datetime import datetime, timezone
+from pathlib import Path
+
+CURRENT = "https://usetrmnl.com/api/display/current"
+KEY_NAME = "TRMNL_DEVICE_API_KEY"
+
+
+def find_key():
+    """Environment first, then the nearest .env walking up from cwd and from here."""
+    if os.environ.get(KEY_NAME):
+        return os.environ[KEY_NAME]
+    seen = set()
+    for start in (Path.cwd(), Path(__file__).resolve().parent):
+        for directory in (start, *start.parents):
+            candidate = directory / ".env"
+            if candidate in seen or not candidate.is_file():
+                seen.add(candidate)
+                continue
+            seen.add(candidate)
+            for line in candidate.read_text().splitlines():
+                key, _, value = line.partition("=")
+                if key.strip() == KEY_NAME:
+                    return value.strip().strip("'\"")
+    sys.exit(f"No {KEY_NAME} in the environment or any .env above this script.")
+
+
+def current(key):
+    request = urllib.request.Request(CURRENT, headers={"Access-Token": key})
+    try:
+        with urllib.request.urlopen(request, timeout=20) as response:
+            payload = json.load(response)
+    except urllib.error.HTTPError as error:
+        sys.exit(f"{CURRENT} returned {error.code}. Is the device key current?")
+    if payload.get("status") != 200 or not payload.get("filename"):
+        # A wrong or rotated key comes back as a 200 body carrying an error.
+        sys.exit(f"TRMNL says: {payload.get('error', payload)}")
+    return payload
+
+
+def built_at(filename):
+    """Epoch suffix -> aware datetime. Undocumented, so fail loudly if it moves."""
+    try:
+        return datetime.fromtimestamp(int(filename.rsplit("-", 1)[1]), timezone.utc)
+    except (IndexError, ValueError):
+        sys.exit(f"Cannot read a build time from filename {filename!r} — "
+                 "TRMNL may have changed the format.")
+
+
+def describe(payload):
+    built = built_at(payload["filename"]).astimezone()
+    age = (datetime.now(timezone.utc) - built.astimezone(timezone.utc)).total_seconds()
+    print(f"screen : {payload['filename']}")
+    print(f"built  : {built:%H:%M:%S %Z}  ({age / 60:.1f} min ago)")
+    print(f"next   : device checks back in {payload['refresh_rate']}s")
+    print(f"image  : {payload['image_url']}")
+
+
+def show(url):
+    opener = "open" if sys.platform == "darwin" else "xdg-open"
+    try:
+        subprocess.run([opener, url], check=False,
+                       stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    except FileNotFoundError:
+        print(f"(no {opener} on PATH — open the URL above yourself)")
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__,
+                                     formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser.add_argument("--no-open", action="store_true",
+                        help="print the URL without opening it")
+    parser.add_argument("--watch", nargs="?", type=int, const=30, metavar="SECONDS",
+                        help="poll and report each new image (default every 30s)")
+    args = parser.parse_args()
+
+    key = find_key()
+    payload = current(key)
+    describe(payload)
+    if not args.no_open:
+        show(payload["image_url"])
+
+    if args.watch is None:
+        return
+
+    last = payload["filename"]
+    print(f"\nwatching every {args.watch}s — ctrl-c to stop")
+    while True:
+        time.sleep(args.watch)
+        try:
+            payload = current(key)
+        except SystemExit:
+            raise
+        except Exception as error:                      # transient network, keep going
+            print(f"  {datetime.now():%H:%M:%S}  ({error})")
+            continue
+        if payload["filename"] == last:
+            built = built_at(payload["filename"]).astimezone()
+            age = (datetime.now(timezone.utc)
+                   - built.astimezone(timezone.utc)).total_seconds()
+            print(f"  {datetime.now():%H:%M:%S}  unchanged ({age / 60:.1f} min old)")
+            continue
+        last = payload["filename"]
+        print()
+        describe(payload)
+        if not args.no_open:
+            show(payload["image_url"])
+
+
+if __name__ == "__main__":
+    main()
