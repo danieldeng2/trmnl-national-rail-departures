@@ -5,11 +5,31 @@ dark_mode: 'no'
 static_data: ''
 polling_verb: get
 framework_version: 2.3.7
-serverless_language: 
+serverless_language:
 polling_url: https://api1.raildata.org.uk/1010-live-departure-board-dep1_2/LDBWS/api/20220120/GetDepBoardWithDetails/{{ departing_crs }}?numRows=10&filterCrs={{ arriving_crs }}&filterType=to
 polling_headers: x-apikey={{ api_key }}
 polling_body: ''
-id: 203604
+id: 458800
+oauth_enabled: 'false'
+oauth_pkce_enabled: 'no'
+oauth_authorize_url: ''
+oauth_token_url: ''
+oauth_scopes: ''
+oauth_scope_separator: ''
+oauth_refresh_url: ''
+oauth_auth_params: ''
+oauth_token_headers: ''
+oauth_token_site: ''
+oauth_token_params: ''
+oauth_token_request_auth_method: ''
+oauth_body_format: ''
+oauth_token_response_metadata: ''
+oauth_authorization_method: ''
+oauth_refresh_params: ''
+oauth_token_field_name: ''
+oauth_expiry_field_name: ''
+oauth_expiry_strategy: ''
+oauth_fixed_expiry_ms: ''
 custom_fields:
 - keyname: author_bio
   name: About This Plugin
@@ -54,4 +74,5 @@ custom_fields:
   min: 0
   description: If set, journeys to your destination shorter than this many minutes are marked with a clock icon. Leave blank to hide the marker.
 name: National Rail Departures
+description: ''
 refresh_interval: 15
