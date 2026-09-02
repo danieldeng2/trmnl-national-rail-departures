@@ -15,8 +15,16 @@
                 </tr>
             </thead>
             <tbody>
-                {% if result_count > 0 %}
+                {% if visible_count > 0 %}
                 {% for service in trainServices %}
+                {%- assign eff = service.std -%}
+                {%- assign eff_unknown = false -%}
+                {%- if service.etd contains ":" -%}{%- assign eff = service.etd -%}
+                {%- elsif service.etd == "Delayed" -%}{%- assign eff_unknown = true -%}{%- endif -%}
+                {%- assign eff_local = today_local | append: eff | date: "%s" -%}
+                {%- assign eff_delta = eff_local | minus: now_local -%}
+                {%- if eff_delta < -21600 -%}{%- assign eff_delta = eff_delta | plus: 86400 -%}{%- endif -%}
+                {%- if eff_delta < 0 and eff_unknown == false %}{% continue %}{% endif %}
                 {% assign destination = service.subsequentCallingPoints.first.callingPoint | where: "crs", filtercrs | first %}
                 {% assign row_cancelled = false %}
                 {% if service.etd == "Cancelled" or destination.isCancelled %}{% assign row_cancelled = true %}{% endif %}

@@ -14,3 +14,29 @@ https://github.com/Templarian/MaterialDesign/blob/master/LICENSE
 {% else %}
 {% assign fast_train_threshold = 0 %}
 {% endif %}
+{% comment %}
+TRMNL renders Liquid in UTC, so shift into the user's zone before comparing against
+the London local times National Rail returns. `visible_count` counts services that
+have not departed yet at render time; the size templates skip the rest. Those left
+before this screen existed, so dropping them can never hide a train you could still
+have caught.
+
+A service is judged on when it will actually leave, not when it was scheduled to:
+  etd is a time ("14:14")  -> use it, so a delayed train survives past its std
+  etd is "Delayed"         -> no estimate given, it has not left, always keep
+  etd is "On time"         -> use std
+  etd is "Cancelled"       -> use std, so it drops once its slot passes
+{%- endcomment -%}
+{%- assign now_local = trmnl.system.timestamp_utc | plus: trmnl.user.utc_offset -%}
+{%- assign today_local = now_local | date: "%d %B %Y " -%}
+{%- assign visible_count = 0 -%}
+{%- for service in trainServices -%}
+{%- assign eff = service.std -%}
+{%- assign eff_unknown = false -%}
+{%- if service.etd contains ":" -%}{%- assign eff = service.etd -%}
+{%- elsif service.etd == "Delayed" -%}{%- assign eff_unknown = true -%}{%- endif -%}
+{%- assign eff_local = today_local | append: eff | date: "%s" -%}
+{%- assign eff_delta = eff_local | minus: now_local -%}
+{%- if eff_delta < -21600 -%}{%- assign eff_delta = eff_delta | plus: 86400 -%}{%- endif -%}
+{%- if eff_delta >= 0 or eff_unknown -%}{%- assign visible_count = visible_count | plus: 1 -%}{%- endif -%}
+{%- endfor -%}
