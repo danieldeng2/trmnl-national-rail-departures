@@ -75,4 +75,7 @@ custom_fields:
   description: If set, journeys to your destination shorter than this many minutes are marked with a clock icon. Leave blank to hide the marker.
 name: National Rail Departures
 description: ''
-refresh_interval: 15
+# LaraPaper maps this to data_stale_minutes: at a 300s device poll, 1 means
+# every wake refetches. TRMNL cloud clamps it to 15, so the repo stays
+# dual-compatible.
+refresh_interval: 1
